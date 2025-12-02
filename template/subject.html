@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ExSplit — Subject Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ...existing design language... */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px
+        }
+
+        .meta {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .meta .muted {
+            font-size: 13px
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .expenses {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px
+        }
+
+        .expenses th,
+        .expenses td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f3f6;
+            text-align: left;
+            font-size: 14px
+        }
+
+        .amount {
+            font-weight: 700
+        }
+
+        .total-row td {
+            padding: 12px 10px;
+            font-weight: 800
+        }
+
+        .add-expense {
+            background: #065f46;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer
+        }
+
+        /* modal reused from index page with a few tweaks */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .modal {
+            background: #fff;
+            width: 560px;
+            max-width: calc(100% - 32px);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
+        }
+
+        .modal h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .modal .row {
+            display: flex;
+            gap: 8px
+        }
+
+        .input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e6e9ef
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px
+        }
+
+        /* added: split controls styling */
+        .split-area {
+            border: 1px solid #eef2ff;
+            background: #fbfdff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .split-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eef2ff
+        }
+
+        .split-row:last-child {
+            border-bottom: 0
+        }
+
+        .split-row .member-name {
+            flex: 1;
+            font-weight: 600
+        }
+
+        .split-row .member-amount {
+            width: 120px
+        }
+
+        .split-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .split-warning {
+            color: #991b1b;
+            font-size: 13px;
+            margin-top: 6px
+        }
+
+        textarea.input {
+            min-height: 35px;
+            width: 100%;
+            padding: 10px
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container" style="max-width:820px">
+        <header style="margin-bottom:18px">
+            <a href="index.html" style="color:var(--accent);font-size:13px;font-weight:700;text-decoration:none;">← Back
+                to subjects</a>
+            <h1 style="margin:8px 0 0 0;font-size:20px">Subject: Groceries</h1>
+            <p class="muted" style="margin:6px 0 0 0;">Group for shared grocery expenses</p>
+        </header>
+
+        <section class="card">
+            <div class="header-row">
+                <div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="subject-icon" style="width:44px;height:44px;font-size:16px;border-radius:10px">GR
+                        </div>
+                        <div>
+                            <div style="font-weight:800">Groceries</div>
+                            <div class="meta">
+                                <span class="count">Members: 3</span>
+                                <span class="status status-active" style="font-weight:700">Active</span>
+                                <span class="muted">Created 5 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="add-expense-btn" class="add-expense">Add expense</button>
+                </div>
+            </div>
+
+            <!-- expenses table -->
+            <table class="expenses" aria-label="Expenses">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width:160px">Paid by</th>
+                        <th style="width:120px">Date</th>
+                        <th style="width:120px;text-align:right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-body">
+                    <tr>
+                        <td>Weekly groceries (Wholefoods)</td>
+                        <td>Alice</td>
+                        <td>2025-11-22</td>
+                        <td class="amount" data-amount="72.45">$72.45</td>
+                    </tr>
+                    <tr>
+                        <td>Vegetables & fruits</td>
+                        <td>Bob</td>
+                        <td>2025-11-18</td>
+                        <td class="amount" data-amount="24.30">$24.30</td>
+                    </tr>
+                    <tr>
+                        <td>Snacks</td>
+                        <td>Bob</td>
+                        <td>2025-11-16</td>
+                        <td class="amount" data-amount="9.99">$9.99</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:right">Total</td>
+                        <td id="total-amount" style="text-align:right">$106.74</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+    </main>
+
+    <!-- add expense modal -->
+    <div id="expense-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal" role="document" aria-labelledby="expense-title">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <h3 id="expense-title">Add expense — Groceries</h3>
+                <button id="expense-close" class="btn-secondary" aria-label="Close">✕</button>
+            </div>
+
+            <form id="expense-form" onsubmit="return false;">
+                <label style="display:block;font-weight:700;margin-bottom:6px;">Description</label>
+                <textarea id="exp-desc" class="input" placeholder="e.g. Milk and bread" required></textarea>
+
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <div style="flex:1">
+                        <label style="display:block;font-weight:700;margin-bottom:6px;">Paid by</label>
+                        <select id="exp-paidby" class="input">
+                            <option>Alice</option>
+                            <option>Bob</option>
+                            <option>Charlie</option>
+                        </select>
+                    </div>
+                    <div style="width:160px">
+                        <label style="display:block;font-weight:700;margin-bottom:6px;">Date</label>
+                        <input id="exp-date" class="input" type="date" />
+                    </div>
+                    <div style="width:150px">
+                        <label style="display:block;font-weight:700;margin-bottom:6px;">Amount</label>
+                        <input id="exp-amount" class="input" type="number" step="0.01" min="0" placeholder="0.00"
+                            required />
+                    </div>
+                </div>
+
+                <!-- split UI -->
+                <div class="split-area" aria-hidden="false">
+                    <div class="split-controls">
+                        <label style="display:flex;align-items:center;gap:8px;font-weight:700">
+                            <input type="checkbox" id="split-equal" checked /> Split equally
+                        </label>
+                        <span class="muted">— choose members for this expense</span>
+                    </div>
+
+                    <div id="split-members" style="margin-top:8px">
+                        <!-- member rows -->
+                        <div class="split-row">
+                            <label style="display:flex;align-items:center;gap:8px">
+                                <input type="checkbox" class="member-checkbox" data-name="Alice" checked />
+                                <span class="member-name">Alice</span>
+                            </label>
+                            <input class="input member-amount" type="number" step="0.01" min="0" placeholder="0.00"
+                                disabled />
+                        </div>
+                        <div class="split-row">
+                            <label style="display:flex;align-items:center;gap:8px">
+                                <input type="checkbox" class="member-checkbox" data-name="Bob" checked />
+                                <span class="member-name">Bob</span>
+                            </label>
+                            <input class="input member-amount" type="number" step="0.01" min="0" placeholder="0.00"
+                                disabled />
+                        </div>
+                        <div class="split-row">
+                            <label style="display:flex;align-items:center;gap:8px">
+                                <input type="checkbox" class="member-checkbox" data-name="Charlie" checked />
+                                <span class="member-name">Charlie</span>
+                            </label>
+                            <input class="input member-amount" type="number" step="0.01" min="0" placeholder="0.00"
+                                disabled />
+                        </div>
+                    </div>
+
+                    <div id="split-warning" class="split-warning" hidden></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="exp-cancel" class="btn-secondary">Cancel</button>
+                    <button id="exp-add" class="add-expense">Add expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // small client-side behavior to add an expense to the table and update total
+        (function () {
+            const openBtn = document.getElementById('add-expense-btn');
+            const backdrop = document.getElementById('expense-modal');
+            const closeBtn = document.getElementById('expense-close');
+            const cancelBtn = document.getElementById('exp-cancel');
+            const addBtn = document.getElementById('exp-add');
+
+            const desc = document.getElementById('exp-desc');
+            const paidBy = document.getElementById('exp-paidby');
+            const dateEl = document.getElementById('exp-date');
+            const amountEl = document.getElementById('exp-amount');
+
+            const expensesBody = document.getElementById('expenses-body');
+            const totalAmount = document.getElementById('total-amount');
+
+            const splitEqual = document.getElementById('split-equal');
+            const memberCheckboxes = Array.from(document.querySelectorAll('.member-checkbox'));
+            const memberAmountInputs = Array.from(document.querySelectorAll('.member-amount'));
+            const splitWarning = document.getElementById('split-warning');
+
+            function showModal() { backdrop.style.display = 'flex'; backdrop.setAttribute('aria-hidden', 'false'); desc.focus(); }
+            function hideModal() { backdrop.style.display = 'none'; backdrop.setAttribute('aria-hidden', 'true'); }
+
+            openBtn.addEventListener('click', showModal);
+            closeBtn.addEventListener('click', hideModal);
+            cancelBtn.addEventListener('click', function (e) { e.preventDefault(); hideModal(); });
+
+            function computeAndApplySplits() {
+                const total = parseFloat(amountEl.value) || 0;
+                const selected = memberCheckboxes.filter(cb => cb.checked);
+                if (!selected.length) {
+                    splitWarning.hidden = false;
+                    splitWarning.textContent = 'Select at least one member to split the expense';
+                    return false;
+                }
+                splitWarning.hidden = true;
+
+                if (splitEqual.checked) {
+                    // equal split — divide and handle rounding remainder
+                    const count = selected.length;
+                    let base = Math.floor((total / count) * 100) / 100; // two-decimal floor
+                    let assigned = base * count;
+                    let remainder = Math.round((total - assigned) * 100) / 100;
+                    // assign base + remainder to the first member to balance rounding
+                    memberAmountInputs.forEach((inp, i) => {
+                        const cb = memberCheckboxes[i];
+                        if (!cb.checked) { inp.value = ''; inp.disabled = true; return; }
+                        inp.disabled = true;
+                        const val = cb === selected[0] ? (base + remainder) : base;
+                        inp.value = val ? val.toFixed(2) : '0.00';
+                    });
+                } else {
+                    // custom split — enable fields for selected members
+                    memberAmountInputs.forEach((inp, i) => {
+                        const cb = memberCheckboxes[i];
+                        if (!cb.checked) { inp.value = ''; inp.disabled = true; return; }
+                        inp.disabled = false;
+                        // if empty, initialize to equal part
+                        if (!inp.value) {
+                            const init = (total / selected.length) || 0;
+                            inp.value = init.toFixed(2);
+                        }
+                    });
+                    // validate sum equal total
+                    let sum = selected.reduce((acc, cb) => {
+                        const idx = memberCheckboxes.indexOf(cb);
+                        const val = parseFloat(memberAmountInputs[idx].value) || 0;
+                        return acc + val;
+                    }, 0);
+                    sum = Math.round(sum * 100) / 100;
+                    if (Math.abs(sum - total) > 0.001) {
+                        splitWarning.hidden = false;
+                        splitWarning.textContent = 'Custom split amounts must add up to total (' + total.toFixed(2) + ') — current sum: ' + sum.toFixed(2);
+                        return false;
+                    } else {
+                        splitWarning.hidden = true;
+                    }
+                }
+                return true;
+            }
+
+            openBtn.addEventListener('click', showModal);
+            closeBtn.addEventListener('click', hideModal);
+            cancelBtn.addEventListener('click', function (e) { e.preventDefault(); hideModal(); });
+
+            addBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const d = desc.value.trim();
+                const p = paidBy.value.trim();
+                const dt = dateEl.value || new Date().toISOString().slice(0, 10);
+                const amt = parseFloat(amountEl.value);
+                if (!d || isNaN(amt)) return;
+
+                // ensure split validity before adding
+                if (!computeAndApplySplits()) return;
+
+                // collect splits
+                const splits = [];
+                memberCheckboxes.forEach((cb, i) => {
+                    if (!cb.checked) return;
+                    const name = cb.getAttribute('data-name');
+                    const val = parseFloat(memberAmountInputs[i].value) || 0;
+                    splits.push({ name, amount: Math.round(val * 100) / 100 });
+                });
+
+                // append row including split breakdown below description
+                const tr = document.createElement('tr');
+                const splitSummary = splits.map(s => escapeHTML(s.name) + ' $' + s.amount.toFixed(2)).join(', ');
+                tr.innerHTML = '<td>' + escapeHTML(d) + '<div class="muted" style="font-size:12px;margin-top:6px">Split: ' + splitSummary + '</div></td><td>' + escapeHTML(p) + '</td><td>' + escapeHTML(dt) + '</td><td class="amount" data-amount="' + amt + '">$' + amt.toFixed(2) + '</td>';
+                expensesBody.insertBefore(tr, expensesBody.firstChild);
+                updateTotal();
+
+                // clear form & close modal
+                desc.value = ''; amountEl.value = ''; dateEl.value = '';
+                // reset split UI state: equal + all members checked
+                splitEqual.checked = true;
+                memberCheckboxes.forEach((cb, i) => { cb.checked = true; memberAmountInputs[i].value = ''; memberAmountInputs[i].disabled = true; });
+                splitWarning.hidden = true;
+                hideModal();
+            });
+
+            function updateTotal() {
+                let sum = 0;
+                document.querySelectorAll('#expenses-body .amount').forEach(td => {
+                    sum += parseFloat(td.getAttribute('data-amount') || 0);
+                });
+                totalAmount.textContent = '$' + sum.toFixed(2);
+            }
+
+            function escapeHTML(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+            updateTotal();
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>ExSplit — Subjects</title>
+	<link rel="stylesheet" href="styles.css">
+	<!-- added: small helpers for member count & status badges -->
+	<style>
+		.subject-meta .meta-line { font-size:12px; font-weight:400; color: #6b7280; margin-top:6px; display:flex; gap:10px; align-items:center; }
+		.count { background:#f1f5f9; padding:4px 8px; border-radius:6px; font-weight:600; color:#0f172a; font-size:12px; }
+		.status { padding:4px 8px; border-radius:999px; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.6px; }
+		.status-settled { background:#ecfdf5; color:#065f46; }
+		.status-active { background:#fff1f2; color:#991b1b; }
+
+		/* modal */
+		.modal-backdrop{ position:fixed; inset:0; background:rgba(2,6,23,0.5); display:none; align-items:center; justify-content:center; z-index:60; }
+		.modal{ background:#fff; width:680px; max-width:calc(100% - 32px); border-radius:12px; padding:18px; box-shadow:0 12px 40px rgba(2,6,23,0.35); }
+		.modal h3{ margin:0 0 8px 0; font-size:16px; }
+		.modal .sub-name { font-weight:700; font-size:14px; color:#0f172a; margin-bottom:12px; }
+		.modal .row { display:flex; gap:8px; }
+		.search { flex:1; padding:9px 10px; border-radius:8px; border:1px solid #e6e9ef; outline:none; }
+		.suggestions{ margin-top:8px; max-height:160px; overflow:auto; border:1px solid #eef2ff; border-radius:8px; background:#fff; padding:8px; }
+		.suggestion{ display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:8px; gap:12px; }
+		.suggestion:hover{ background:#f8fafc; }
+		.add-btn { background:#0366d6; color:#fff; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+		.chips{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+		.chip{ display:flex; gap:8px; align-items:center; background:#f1f5f9; padding:6px 8px; border-radius:999px; font-weight:600; font-size:13px; }
+		.chip button{ background:transparent; border:none; cursor:pointer; color:#374151; padding-left:6px; font-weight:700; }
+		.modal-actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+		.btn-secondary{ background:transparent; border:1px solid #e6e9ef; padding:8px 12px; border-radius:8px; cursor:pointer; }
+		.show{ display:flex !important; }
+	</style>
+</head>
+<body>
+	<main class="container">
+		<header>
+			<h1>ExSplit — Subjects</h1>
+			<p class="muted">Create subjects under which expenses will be logged.</p>
+		</header>
+
+		<section class="card">
+			<h2>Subjects</h2>
+			<ul id="subjects-list" class="subjects-list" aria-live="polite">
+				<li class="subject-item">
+					<div class="subject-meta">
+						<div class="subject-icon">GR</div>
+						<div>
+							<div>Groceries</div>
+							<div class="meta-line">
+								<span class="count">Members: 3</span>
+								<span class="status status-active">Active</span>
+								<span class="muted">Created 5 days ago</span>
+							</div>
+						</div>
+					</div>
+				</li>
+				<li class="subject-item">
+					<div class="subject-meta">
+						<div class="subject-icon">RE</div>
+						<div>
+							<div>Rent</div>
+							<div class="meta-line">
+								<span class="count">Members: 1</span>
+								<span class="status status-settled">Settled</span>
+								<span class="muted">Created 1 month ago</span>
+							</div>
+						</div>
+					</div>
+				</li>
+				<li class="subject-item">
+					<div class="subject-meta">
+						<div class="subject-icon">UT</div>
+						<div>
+							<div>Utilities</div>
+							<div class="meta-line">
+								<span class="count">Members: 2</span>
+								<span class="status status-active">Active</span>
+								<span class="muted">Created 15 days ago</span>
+							</div>
+						</div>
+					</div>
+				</li>
+				<li class="subject-item">
+					<div class="subject-meta">
+						<div class="subject-icon">EN</div>
+						<div>
+							<div>Entertainment</div>
+							<div class="meta-line">
+								<span class="count">Members: 4</span>
+								<span class="status status-active">Active</span>
+								<span class="muted">Created 10 days ago</span>
+							</div>
+						</div>
+					</div>
+				</li>
+				<li class="subject-item">
+					<div class="subject-meta">
+						<div class="subject-icon">TR</div>
+						<div>
+							<div>Travel</div>
+							<div class="meta-line">
+								<span class="count">Members: 5</span>
+								<span class="status status-settled">Settled</span>
+								<span class="muted">Created 2 months ago</span>
+							</div>
+						</div>
+					</div>
+				</li>
+			</ul>
+			<p id="empty-state" class="muted" hidden>No subjects yet. Add one using the form below.</p>
+		</section>
+
+		<section class="card">
+			<form id="subject-form" aria-label="Add subject">
+				<label for="subject-name">New subject</label>
+				<div class="row">
+					<input id="subject-name" name="subject" type="text" placeholder="e.g. Groceries" autocomplete="off" required />
+					<button type="submit" class="btn">Add</button>
+				</div>
+				<p id="feedback" class="feedback" aria-live="polite"></p>
+			</form>
+		</section>
+	</main>
+
+	<!-- added: modal for adding members to a new subject -->
+	<div id="modal-backdrop" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true">
+		<div class="modal" role="document" aria-labelledby="modal-title">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+				<h3 id="modal-title">Create Subject</h3>
+				<button id="modal-close" class="btn-secondary" aria-label="Close">✕</button>
+			</div>
+
+			<div>
+				<div class="sub-name" id="modal-subject">Subject name</div>
+
+				<label style="font-weight:700;font-size:13px;display:block;margin-bottom:6px;">Search members by email</label>
+				<div class="row">
+					<input id="member-search" class="search" placeholder="Search by email or name" />
+					<button id="dummy-search-clear" class="btn-secondary" title="Clear">Clear</button>
+				</div>
+
+				<div id="suggestions" class="suggestions" aria-live="polite">
+					<!-- suggestions get inserted here -->
+				</div>
+
+				<div class="chips" id="added-members">
+					<!-- selected members -->
+				</div>
+
+				<div class="modal-actions">
+					<button id="cancel-create" class="btn-secondary">Cancel</button>
+					<button id="confirm-create" class="add-btn">Create Subject</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// See minimal changes only: small script to open modal, search/add members and create a new subject in the static list
+		(function(){
+			const addBtn = document.querySelector('#subject-form .btn');
+			const subjectInput = document.querySelector('#subject-name');
+			const feedback = document.querySelector('#feedback');
+
+			const backdrop = document.getElementById('modal-backdrop');
+			const modalSubject = document.getElementById('modal-subject');
+			const searchEl = document.getElementById('member-search');
+			const suggestionsEl = document.getElementById('suggestions');
+			const addedEl = document.getElementById('added-members');
+			const confirmCreate = document.getElementById('confirm-create');
+			const cancelCreate = document.getElementById('cancel-create');
+			const modalClose = document.getElementById('modal-close');
+
+			// small sample user pool for searching
+			const sampleUsers = [
+				{ email: 'alice@example.com', name: 'Alice' },
+				{ email: 'bob@example.com', name: 'Bob' },
+				{ email: 'cathy@example.com', name: 'Cathy' },
+				{ email: 'dan@example.com', name: 'Dan' },
+				{ email: 'eva@example.com', name: 'Eva' },
+				{ email: 'frank@example.com', name: 'Frank' },
+				{ email: 'gina@example.com', name: 'Gina' }
+			];
+
+			let addedMembers = [];
+
+			function openModalForSubject(subName){
+				modalSubject.textContent = subName;
+				searchEl.value = '';
+				addedMembers = [];
+				renderSuggestions(sampleUsers.slice(0,5));
+				renderAdded();
+				backdrop.classList.add('show');
+				backdrop.setAttribute('aria-hidden','false');
+				searchEl.focus();
+			}
+
+			function closeModal(){
+				backdrop.classList.remove('show');
+				backdrop.setAttribute('aria-hidden','true');
+			}
+
+			addBtn.addEventListener('click', function(ev){
+				ev.preventDefault();
+				feedback.textContent = '';
+				const name = subjectInput.value.trim();
+				if (!name) { feedback.textContent = 'Please enter a subject name first.'; return; }
+				openModalForSubject(name);
+			});
+
+			modalClose.addEventListener('click', closeModal);
+			cancelCreate.addEventListener('click', closeModal);
+			backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+			document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+			function renderSuggestions(list){
+				suggestionsEl.innerHTML = '';
+				if (!list.length){
+					suggestionsEl.innerHTML = '<div class="muted" style="padding:8px">No results</div>';
+					return;
+				}
+				list.forEach(u => {
+					const div = document.createElement('div');
+					div.className = 'suggestion';
+					div.innerHTML = '<div style="display:flex;gap:10px;align-items:center;"><div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#eaf6ff,#e0f2ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0366d6">' + initials(u.name) + '</div><div><div style="font-weight:700">' + escapeHTML(u.name) + '</div><div class="muted" style="font-size:12px;">' + escapeHTML(u.email) + '</div></div></div><div>' + (addedMembers.find(m => m.email===u.email) ? '<span style="color:#6b7280;font-weight:700;">Added</span>' : '<button class="add-btn btn-add" data-email="'+escapeHTML(u.email)+'">Add</button>') + '</div>';
+					suggestionsEl.appendChild(div);
+				});
+			}
+
+			function renderAdded(){
+				addedEl.innerHTML = '';
+				addedMembers.forEach(m => {
+					const span = document.createElement('div');
+					span.className = 'chip';
+					span.innerHTML = '<div style="display:flex;gap:8px;align-items:center;"><div style="width:28px;height:28px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0366d6">' + initials(m.name || m.email) + '</div><div>' + escapeHTML(m.name || '') + ' <span style="font-weight:600;color:#6b7280;font-size:12px;">&nbsp;' + escapeHTML(m.email) + '</span></div></div><button aria-label="remove" data-email="'+escapeHTML(m.email)+'">✕</button>';
+					addedEl.appendChild(span);
+				});
+			}
+
+			// search input
+			searchEl.addEventListener('input', () => {
+				const q = searchEl.value.trim().toLowerCase();
+				if (!q) { renderSuggestions(sampleUsers.slice(0,5)); return; }
+				const matches = sampleUsers.filter(u => (u.email + ' ' + u.name).toLowerCase().includes(q));
+				renderSuggestions(matches);
+			});
+
+			// delegate add-from-suggestions
+			suggestionsEl.addEventListener('click', (e) => {
+				const btn = e.target.closest('.btn-add');
+				if (!btn) return;
+				const email = btn.getAttribute('data-email');
+				const found = sampleUsers.find(u => u.email === email);
+				if (found && !addedMembers.find(m => m.email === email)){
+					addedMembers.push(found);
+					renderAdded();
+					renderSuggestions(sampleUsers.filter(u=> (u.email + ' ' + u.name).toLowerCase().includes(searchEl.value.trim().toLowerCase())));
+				}
+			});
+
+			// delegate remove from added
+			addedEl.addEventListener('click', (e) => {
+				const rem = e.target.closest('button[data-email]');
+				if (!rem) return;
+				const em = rem.getAttribute('data-email');
+				addedMembers = addedMembers.filter(m => m.email !== em);
+				renderAdded();
+				renderSuggestions(sampleUsers.filter(u=> (u.email + ' ' + u.name).toLowerCase().includes(searchEl.value.trim().toLowerCase())));
+			});
+
+			// create subject -> push into the static subjects list
+			confirmCreate.addEventListener('click', () => {
+				const name = modalSubject.textContent.trim();
+				if (!name) return;
+				const id = 's-' + Date.now().toString(36);
+				const membersCount = addedMembers.length || 1;
+				const statusClass = 'status-active';
+				const createdText = 'Just now';
+
+				const ul = document.getElementById('subjects-list');
+				const li = document.createElement('li');
+				li.className = 'subject-item';
+				const initialsText = initials(name);
+				li.innerHTML = '<div class="subject-meta"><div class="subject-icon">' + initialsText + '</div><div><div>' + escapeHTML(name) + '</div><div class="meta-line"><span class="count">Members: ' + membersCount + '</span><span class="status ' + statusClass + '">Active</span><span class="muted">' + createdText + '</span></div></div></div>';
+				ul.insertBefore(li, ul.firstChild);
+
+				// clear the input subject name and close
+				subjectInput.value = '';
+				closeModal();
+
+				// ensure empty state hidden if present
+				const empty = document.getElementById('empty-state');
+				if (empty) empty.hidden = true;
+			});
+
+			// helper functions
+			function initials(text){
+				return (text || '').split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join('');
+			}
+			function escapeHTML(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+		})();
+	</script>
+</body>
+</html>
