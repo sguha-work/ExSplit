@@ -1,0 +1,148 @@
+.header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px
+        }
+
+        .meta {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .meta .muted {
+            font-size: 13px
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center
+        }
+
+        .expenses {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px
+        }
+
+        .expenses th,
+        .expenses td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f3f6;
+            text-align: left;
+            font-size: 14px
+        }
+
+        .amount {
+            font-weight: 700
+        }
+
+        .total-row td {
+            padding: 12px 10px;
+            font-weight: 800
+        }
+
+        .add-expense {
+            background: #065f46;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer
+        }
+
+        /* modal reused from index page with a few tweaks */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .modal {
+            background: #fff;
+            width: 560px;
+            max-width: calc(100% - 32px);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
+        }
+
+        .modal h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .modal .row {
+            display: flex;
+            gap: 8px
+        }
+
+        .input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e6e9ef
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 12px
+        }
+
+        /* added: split controls styling */
+        .split-area {
+            border: 1px solid #eef2ff;
+            background: #fbfdff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .split-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eef2ff
+        }
+
+        .split-row:last-child {
+            border-bottom: 0
+        }
+
+        .split-row .member-name {
+            flex: 1;
+            font-weight: 600
+        }
+
+        .split-row .member-amount {
+            width: 120px
+        }
+
+        .split-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .split-warning {
+            color: #991b1b;
+            font-size: 13px;
+            margin-top: 6px
+        }
+
+        textarea.input {
+            min-height: 35px;
+            width: 100%;
+            padding: 10px
+        }
