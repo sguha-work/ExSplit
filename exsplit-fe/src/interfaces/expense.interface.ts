@@ -2,6 +2,7 @@ import type { ExpenseMethod } from "../enums/expense-method.enum";
 import type { SplitMethod } from "../enums/spent-method.enum";
 
 export default interface Expense {
+    id?: number;
     amount: number;
     purpose: string;
     description?: string;
@@ -12,8 +13,9 @@ export default interface Expense {
     paymentMode: ExpenseMethod;
     splitMethod: SplitMethod;
     involvedMembers: Array<{
-        user: string;
+        userId: number;
         share: number; // percentage of the expense
         amount?: number;
-    }>
+    }>;
+    subjectId: number;
 }
