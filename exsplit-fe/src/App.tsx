@@ -1,28 +1,22 @@
-import './App.css'
-import AddExpenseFormCompontent from './components/utilities/add-expense-form/add-expense-form.compontent'
-import AddSubjectModalComponent from './components/utilities/add-subject-modal/add-subject-modal.component'
-import HeaderComponent from './components/utilities/header/header.component'
-import SubjectListComponent from './components/utilities/subject-list/subject-list.component'
+import { Routes, Route } from "react-router-dom";
+import './App.css';
+import HomePageComponent from './components/pages/home/home.page.component'
+import SubjectPageComponent from "./components/pages/subject/subject.page.component";
+
 
 function App() {
 
   return (
     <>
-      <>
-        <main className="container">
-          <HeaderComponent></HeaderComponent>
-          <section className="card">
-            <h2>Subjects</h2>
-            <SubjectListComponent></SubjectListComponent>
-          </section>
-          <section className="card">
-            <AddExpenseFormCompontent></AddExpenseFormCompontent>
-          </section>
-        </main>
-        {/* added: modal for adding members to a new subject */}
-        <AddSubjectModalComponent></AddSubjectModalComponent>
-      </>
+      <Routes>
+        <Route path="/" element={<HomePageComponent />} />
 
+        {/* Route with dynamic param */}
+        <Route path="/subject/:id" element={<SubjectPageComponent />} />
+
+        {/* Catch-all for 404 */}
+        {/* <Route path="*" element={<NotFound />} /> */}
+      </Routes>
     </>
   )
 }

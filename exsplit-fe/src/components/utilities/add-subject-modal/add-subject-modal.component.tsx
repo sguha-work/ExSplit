@@ -1,12 +1,16 @@
-function AddSubjectModalComponent() {
+interface AddSubjectModalProps {
+    display: boolean;
+    subjectName?: string;
+}
+function AddSubjectModalComponent(props: AddSubjectModalProps) {
     return (
         <>
             <div
                 id="modal-backdrop"
                 className="modal-backdrop"
-                aria-hidden="true"
                 role="dialog"
                 aria-modal="true"
+                style={{ "display": props.display ? "flex" : "none" }}
             >
                 <div className="modal" role="document" aria-labelledby="modal-title">
                     <div
@@ -24,7 +28,7 @@ function AddSubjectModalComponent() {
                     </div>
                     <div>
                         <div className="sub-name" id="modal-subject">
-                            Subject name
+                            Subject name :--&gt; <b>&nbsp;"{props.subjectName}"</b>
                         </div>
                         <label
                             style={{
