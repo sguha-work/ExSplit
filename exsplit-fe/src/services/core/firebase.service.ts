@@ -9,6 +9,9 @@ import {
     deleteDoc, 
     getDoc,
     addDoc,
+    query,
+    where,
+    getDocs,
     Timestamp 
 } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
@@ -236,6 +239,38 @@ class FirebaseService {
             }
         } catch (error) {
             console.error(`Error getting document ${documentId} from ${collectionName}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Query documents from a collection by field
+     * @param collectionName Name of the collection
+     * @param fieldName Field name to query
+     * @param fieldValue Field value to match
+     * @returns Promise resolving to an array of matching documents
+     */
+    public async queryByField<T>(
+        collectionName: string,
+        fieldName: string,
+        fieldValue: string | number | boolean
+    ): Promise<T[]> {
+        this.ensureInitialized();
+
+        try {
+            const db = this.getDb();
+            const collectionRef = collection(db, collectionName);
+            const q = query(collectionRef, where(fieldName, '==', fieldValue));
+            const querySnapshot = await getDocs(q);
+
+            const results: T[] = [];
+            querySnapshot.forEach((docSnapshot) => {
+                results.push({ id: docSnapshot.id, ...docSnapshot.data() } as T);
+            });
+
+            return results;
+        } catch (error) {
+            console.error(`Error querying ${collectionName} by ${fieldName}:`, error);
             throw error;
         }
     }
