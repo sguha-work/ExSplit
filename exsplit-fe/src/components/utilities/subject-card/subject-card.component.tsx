@@ -9,7 +9,7 @@ function SubjectCardComponent() {
                         <span className="count">Members: 3</span>
                         <span className="status status-active">Active</span>
                         {/* <span className="status status-settled">Settled</span> */}
-                        <span className="muted">Created 5 days ago</span>
+                        <span className="muted">Created 5 days ago on (19-12-2025 10:10PM)</span>
                     </div>
                 </div>
             </div>
